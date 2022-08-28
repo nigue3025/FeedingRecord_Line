@@ -1,2 +1,2 @@
 # FeedingRecord_Line
-Transform line feeding record to structural data
+Transform line feeding chatting record to structural data
