@@ -128,7 +128,9 @@ namespace JerryRecord
                 }
                 OutDetailRecord.Add(daySb.ToString());
                 
-                EachDayTotalMilk.Add(string.Format("母總:{0},配總:{1},共:{2},進食次數:{3}", totalMMilk, totalFMilk, totalFMilk + totalMMilk,foodLst.Count));
+
+                //EachDayTotalMilk.Add(string.Format("母總:{0},配總:{1},共:{2},進食次數:{3}", totalMMilk, totalFMilk, totalFMilk + totalMMilk,foodLst.Count));
+                EachDayTotalMilk.Add(string.Format("{0},{1},{2},{3}", totalMMilk, totalFMilk, totalFMilk + totalMMilk, foodLst.Count));
                 dayStatSb.Append(EachDayTotalMilk.Last());
                 OutRecordStat.Add(dayStatSb.ToString());
             }
@@ -140,6 +142,8 @@ namespace JerryRecord
             }
             using (System.IO.StreamWriter sw = new System.IO.StreamWriter("統計資訊.csv",false,Encoding.UTF8))
             {
+                string statLable = string.Format("日期,母,配,母+配,進食次數\n");
+                sw.Write(statLable);
                 sw.Write(string.Join("\n", OutRecordStat));
             }
 
