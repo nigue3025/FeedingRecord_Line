@@ -6,42 +6,52 @@ using System.Threading.Tasks;
 
 namespace JerryRecord
 {
-    class Program
+    public class DaySplitter
     {
-        
-        static void Main(string[] args)
+        string Filename;
+        List<string> LoadedFIleLineLst = new List<string>();
+        public List<string> EachDayRecord = new List<string>();
+        public DaySplitter(string filename)
         {
-            char[] foodsplitChar = new char[] { ',', '，', '?' };
-            List<string> strLst = new List<string>();
+            Filename = filename;
+        }
+        public DaySplitter()
+        {
 
-            using (System.IO.StreamReader sr = new System.IO.StreamReader("BbRecord.txt"))
+        }
+        public void LoadFileToList()
+        {
+            LoadedFIleLineLst.Clear();
+            using (System.IO.StreamReader sr = new System.IO.StreamReader(Filename))
             {
                 string str;
-                while((str=sr.ReadLine())!=null)
+                while ((str = sr.ReadLine()) != null)
                 {
-                    strLst.Add(str);
+                    LoadedFIleLineLst.Add(str);
                 }
 
             }
+        }
 
 
+
+        public void generateDayRecord()
+        {
             List<string> DateLst = new List<string>();
-            List<string> EachDayRecord = new List<string>();
+
             List<string> EachDayTotalMilk = new List<string>();
             StringBuilder sb = new StringBuilder();
             List<string> OutDetailRecord = new List<string>();
             List<string> OutRecordStat = new List<string>();
-            foreach(var strln in strLst)
+            foreach (var strln in LoadedFIleLineLst)
             {
 
                 var strAry = strln.Split(':');
-                if (strln == "2022.08.22 星期一")
-                    strAry = strAry;
 
-                    //if(strAry.Length==1)
+                //if(strAry.Length==1)
                 if (!strln.Contains(":"))
                 {
-                    if(sb.ToString().Length>0)
+                    if (sb.ToString().Length > 0)
                         EachDayRecord.Add(sb.ToString());
                     sb.Clear();
                     sb.Append(strln);
@@ -56,11 +66,73 @@ namespace JerryRecord
 
             EachDayRecord.Add(sb.ToString());
             sb.Clear();
-            EachDayRecord = EachDayRecord;
+        }
+
+        public void run()
+        {
+            LoadFileToList();
+            generateDayRecord();
+        }
+    }
+
+
+    class Program
+    {
+
+        static void Main(string[] args)
+        {
+            char[] foodsplitChar = new char[] { ',', '，', '?' };
+            List<string> strLst = new List<string>();
+
+            using (System.IO.StreamReader sr = new System.IO.StreamReader("BbRecord.txt"))
+            {
+                string str;
+                while ((str = sr.ReadLine()) != null)
+                {
+                    strLst.Add(str);
+                }
+
+            }
+
+            DaySplitter daySplitter = new DaySplitter("BbRecord.txt");
+            daySplitter.run();
+            var EachDayRecord = daySplitter.EachDayRecord;
+
+            List<string> DateLst = new List<string>();
+            //List<string> EachDayRecord = new List<string>();
+            List<string> EachDayTotalMilk = new List<string>();
+            StringBuilder sb = new StringBuilder();
+            List<string> OutDetailRecord = new List<string>();
+            List<string> OutRecordStat = new List<string>();
+
+            //foreach (var strln in strLst)
+            //{
+
+            //    var strAry = strln.Split(':');
+
+            //        //if(strAry.Length==1)
+            //    if (!strln.Contains(":"))
+            //    {
+            //        if(sb.ToString().Length>0)
+            //            EachDayRecord.Add(sb.ToString());
+            //        sb.Clear();
+            //        sb.Append(strln);
+            //        sb.Append("|");
+            //        continue;
+
+            //    }
+
+            //    sb.Append(strln);
+            //    sb.Append("|");
+            //}
+
+            //EachDayRecord.Add(sb.ToString());
+            //sb.Clear();
+            //EachDayRecord = EachDayRecord;
 
             StringBuilder daySb = new StringBuilder();
             StringBuilder dayStatSb = new StringBuilder();
-            foreach(var aRecord in EachDayRecord)
+            foreach (var aRecord in EachDayRecord)
             {
                 daySb.Clear();
                 dayStatSb.Clear();
@@ -75,17 +147,17 @@ namespace JerryRecord
                 dayStatSb.Append(dateStr);
                 dayStatSb.Append(",");
 
-               var foodLst= recordLst.Where(a => a.Contains("配") || a.Contains("母")).Select(a => a).ToList();
-               
+                var foodLst = recordLst.Where(a => a.Contains("配") || a.Contains("母")).Select(a => a).ToList();
+
                 int totalMMilk = 0;
                 int totalFMilk = 0;
-               
+
 
                 foreach (var fooddata in foodLst)
                 {
                     var foodary = fooddata.Split(foodsplitChar).ToList();
                     foodary = foodary;
-               
+
                     if (foodary.Count > 1)
                     {
                         var time = foodary[0].Split(' ').Last();
@@ -114,7 +186,7 @@ namespace JerryRecord
 
 
                         }
-                        string aFeedingRecord= string.Format("時間:{0}_母:{1}_配:{2}", time, MMilk, FMilk);
+                        string aFeedingRecord = string.Format("時間:{0}_母:{1}_配:{2}", time, MMilk, FMilk);
                         daySb.Append(aFeedingRecord);
                         daySb.Append(",");
                         totalMMilk += int.Parse(MMilk);
@@ -127,7 +199,7 @@ namespace JerryRecord
 
                 }
                 OutDetailRecord.Add(daySb.ToString());
-                
+
 
                 //EachDayTotalMilk.Add(string.Format("母總:{0},配總:{1},共:{2},進食次數:{3}", totalMMilk, totalFMilk, totalFMilk + totalMMilk,foodLst.Count));
                 EachDayTotalMilk.Add(string.Format("{0},{1},{2},{3}", totalMMilk, totalFMilk, totalFMilk + totalMMilk, foodLst.Count));
@@ -140,7 +212,7 @@ namespace JerryRecord
             {
                 sw.Write(string.Join("\n", OutDetailRecord));
             }
-            using (System.IO.StreamWriter sw = new System.IO.StreamWriter("統計資訊.csv",false,Encoding.UTF8))
+            using (System.IO.StreamWriter sw = new System.IO.StreamWriter("統計資訊.csv", false, Encoding.UTF8))
             {
                 string statLable = string.Format("日期,母,配,母+配,進食次數\n");
                 sw.Write(statLable);
