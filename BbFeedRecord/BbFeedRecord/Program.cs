@@ -77,7 +77,7 @@ namespace JerryRecord
 
     public class MilkRecorder
     {
-        char[] foodsplitChar = new char[] { ',', '，', '?' };
+        char[] foodsplitChar = new char[] { ',', '，', '?','？' };
         List<string> OutDetailRecord = new List<string>();
         List<string> OutRecordStat = new List<string>();
 
@@ -90,7 +90,7 @@ namespace JerryRecord
         {
             using (System.IO.StreamWriter sw = new System.IO.StreamWriter(filename, false, Encoding.UTF8))
             {
-                string statLable = string.Format("日期,母,配,母+配,進食次數\n");
+                string statLable = string.Format("日期,母,配,母+配,進食次數,平均間隔時間\n");
                 sw.Write(statLable);
                 sw.Write(string.Join("\n", OutRecordStat));
             }
@@ -102,6 +102,46 @@ namespace JerryRecord
             {
                 sw.Write(string.Join("\n", OutDetailRecord));
             }
+        }
+
+        public List<DateTime> convertToTimeList(List<string>TimeLstStr)
+        {
+            return TimeLstStr.Select(
+              a =>
+              {
+                  int hr, min;
+                  var timeAry = a.Split(':');
+                  try
+                  {
+                      hr = int.Parse(timeAry[0].Substring(0, 2));
+                      min = int.Parse(timeAry[1].Substring(0, 2));
+                  }
+                  catch
+                  {
+                      hr = 0;
+                      min = 0;
+                  }
+                  return new DateTime(1, 1, 1, hr, min, 0);
+              }
+              ).ToList();
+
+
+        }
+
+
+        public double ComputeFeedTimeAvg(List<string>TimeLstStr)
+        {
+            var TimeLst = convertToTimeList(TimeLstStr);
+            TimeLst.Sort();
+            List<double> diffTimeLSt = new List<double>();
+            DateTime currDt = DateTime.MinValue;
+            foreach (var dt in TimeLst)
+            {
+                if (currDt != DateTime.MinValue)
+                    diffTimeLSt.Add((dt - currDt).TotalHours);
+                currDt = dt;
+            }
+            return diffTimeLSt.Average();
         }
 
         public void run(DaySplitter DailyData)
@@ -118,6 +158,8 @@ namespace JerryRecord
 
             StringBuilder daySb = new StringBuilder();
             StringBuilder dayStatSb = new StringBuilder();
+
+            //根據每日資料處理配方母奶分配(逐日處裡)
             foreach (var aRecord in EachDayRecord)
             {
                 daySb.Clear();
@@ -127,17 +169,24 @@ namespace JerryRecord
                 recordLst.RemoveAt(0);
                 DateLst.Add(dateStr);
 
+
+             
+
                 daySb.Append(dateStr);
                 daySb.Append(",");
 
                 dayStatSb.Append(dateStr);
                 dayStatSb.Append(",");
 
-                var foodLst = recordLst.Where(a => a.Contains("配") || a.Contains("母")).Select(a => a).ToList();
+               
+                var foodLst = recordLst.Where(a => a.Contains("配") || a.Contains("母")).Select(a => a).ToList(); // 只撈含餵奶資訊限定特定格式(e.g. 100配50母)
 
+
+                #region 整理及統計配方母奶資訊
                 int totalMMilk = 0;
                 int totalFMilk = 0;
 
+               
 
                 foreach (var fooddata in foodLst)
                 {
@@ -184,13 +233,23 @@ namespace JerryRecord
 
                 }
                 OutDetailRecord.Add(daySb.ToString());
-
-
                 EachDayTotalMilk.Add(string.Format("{0},{1},{2},{3}", totalMMilk, totalFMilk, totalFMilk + totalMMilk, foodLst.Count));
-                dayStatSb.Append(EachDayTotalMilk.Last());
+           
+                #endregion
+
+
+                #region 計算餵食間隔時間
+                var foodTimeLst = foodLst.Select(a => ((a.Split(' ')[2]).Insert(2,":")).Split(foodsplitChar)[0]).ToList();
+                var FeedTimeAvg=ComputeFeedTimeAvg(foodTimeLst);
+               
+                #endregion
+
+                #region 產出統計報表
+                dayStatSb.Append(EachDayTotalMilk.Last()+","+FeedTimeAvg.ToString("0.00"));
                 OutRecordStat.Add(dayStatSb.ToString());
+                #endregion  
             }
-            
+
         }
 
     }
