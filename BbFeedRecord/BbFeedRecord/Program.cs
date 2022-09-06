@@ -90,7 +90,7 @@ namespace JerryRecord
         {
             using (System.IO.StreamWriter sw = new System.IO.StreamWriter(filename, false, Encoding.UTF8))
             {
-                string statLable = string.Format("日期,母,配,母+配,進食次數,平均間隔時間\n");
+                string statLable = string.Format("日期,母,配,母+配,進食次數,平均間隔時間,隔日餐間隔時間\n");
                 sw.Write(statLable);
                 sw.Write(string.Join("\n", OutRecordStat));
             }
@@ -129,10 +129,10 @@ namespace JerryRecord
         }
 
 
-        public double ComputeFeedTimeAvg(List<string>TimeLstStr)
+       // public double ComputeFeedTimeAvg(List<string>TimeLstStr)
+        public double ComputeFeedTimeAvg(List<DateTime>TimeLst)
         {
-            var TimeLst = convertToTimeList(TimeLstStr);
-            TimeLst.Sort();
+            
             List<double> diffTimeLSt = new List<double>();
             DateTime currDt = DateTime.MinValue;
             foreach (var dt in TimeLst)
@@ -144,6 +144,16 @@ namespace JerryRecord
             return diffTimeLSt.Average();
         }
 
+
+        public TimeSpan ComputePreDayLastMinusProDayFirstTime(DateTime firstDate,DateTime secondDate)
+        {
+            secondDate=secondDate.AddDays(1);
+            return secondDate - firstDate;
+        }
+
+
+
+        DateTime LastDayTime = DateTime.MinValue;
         public void run(DaySplitter DailyData)
         {
             var EachDayRecord = DailyData.EachDayRecord;
@@ -240,14 +250,31 @@ namespace JerryRecord
 
                 #region 計算餵食間隔時間
                 var foodTimeLst = foodLst.Select(a => ((a.Split(' ')[2]).Insert(2,":")).Split(foodsplitChar)[0]).ToList();
-                var FeedTimeAvg=ComputeFeedTimeAvg(foodTimeLst);
-               
+                var TimeLst = convertToTimeList(foodTimeLst);
+                TimeLst.Sort();
+                var FeedTimeAvg=ComputeFeedTimeAvg(TimeLst);
+                #endregion
+
+                #region 今日第一餐時間-昨日第二餐時間
+                TimeSpan DayTimeDiff =TimeSpan.Zero;
+                if (LastDayTime != DateTime.MinValue)
+                {
+                    DayTimeDiff = ComputePreDayLastMinusProDayFirstTime(LastDayTime, TimeLst.First());
+                    if (DayTimeDiff < (TimeLst[1] - TimeLst[0]))
+                        DayTimeDiff = TimeLst[1] - TimeLst[0];
+                }
+                LastDayTime = TimeLst.Last();
                 #endregion
 
                 #region 產出統計報表
-                dayStatSb.Append(EachDayTotalMilk.Last()+","+FeedTimeAvg.ToString("0.00"));
+                //dayStatSb.Append(EachDayTotalMilk.Last()+","+FeedTimeAvg.ToString("0.00")+","+DayTimeDiff.TotalHours);
+                dayStatSb.AppendFormat("{0},{1},{2}", EachDayTotalMilk.Last(), FeedTimeAvg.ToString("0.00"), DayTimeDiff.TotalHours.ToString("0.00"));
                 OutRecordStat.Add(dayStatSb.ToString());
-                #endregion  
+               
+                // OutRecordStat.Add(",");
+              //  OutRecordStat.Add(DayTimeDiff.TotalHours.ToString());
+             
+                #endregion
             }
 
         }
