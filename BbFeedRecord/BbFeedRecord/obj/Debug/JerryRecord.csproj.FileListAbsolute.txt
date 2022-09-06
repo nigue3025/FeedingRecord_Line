@@ -1,6 +1,0 @@
-c:\users\ni\documents\visual studio 2015\Projects\JerryRecord\JerryRecord\bin\Debug\JerryRecord.exe.config
-c:\users\ni\documents\visual studio 2015\Projects\JerryRecord\JerryRecord\bin\Debug\JerryRecord.exe
-c:\users\ni\documents\visual studio 2015\Projects\JerryRecord\JerryRecord\bin\Debug\JerryRecord.pdb
-c:\users\ni\documents\visual studio 2015\Projects\JerryRecord\JerryRecord\obj\Debug\JerryRecord.csprojResolveAssemblyReference.cache
-c:\users\ni\documents\visual studio 2015\Projects\JerryRecord\JerryRecord\obj\Debug\JerryRecord.exe
-c:\users\ni\documents\visual studio 2015\Projects\JerryRecord\JerryRecord\obj\Debug\JerryRecord.pdb
