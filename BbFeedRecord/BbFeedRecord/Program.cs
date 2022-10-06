@@ -244,12 +244,30 @@ namespace JerryRecord
                 }
                 OutDetailRecord.Add(daySb.ToString());
                 EachDayTotalMilk.Add(string.Format("{0},{1},{2},{3}", totalMMilk, totalFMilk, totalFMilk + totalMMilk, foodLst.Count));
-           
+
                 #endregion
 
 
                 #region 計算餵食間隔時間
-                var foodTimeLst = foodLst.Select(a => ((a.Split(' ')[2]).Insert(2,":")).Split(foodsplitChar)[0]).ToList();
+                List<string> foodTimeLst = new List<string>();
+
+                try
+                {
+                    foodTimeLst = foodLst.Select(a => ((a.Split(' ')[2]).Insert(2, ":")).Split(foodsplitChar)[0]).ToList();
+                }
+                catch(Exception ex)
+                {
+
+                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine("error Data:");
+                    Console.WriteLine(aRecord);
+                    using (System.IO.StreamWriter sw = new System.IO.StreamWriter("errorLog.txt",true))
+                    {
+                        sw.WriteLine("{0}, {1}", DateTime.Now.ToString(), ex.ToString());
+                        sw.WriteLine("{0}", aRecord);
+                        continue;
+                    }
+                }
                 var TimeLst = convertToTimeList(foodTimeLst);
                 TimeLst.Sort();
                 var FeedTimeAvg=ComputeFeedTimeAvg(TimeLst);
